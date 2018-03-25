@@ -2,6 +2,8 @@ import Storage from './Storage/index';
 import ContextualIdentity from './ContextualIdentity';
 import Tabs, {NEW_TAB_PAGES} from './Tabs';
 
+const processedRequests = {};
+
 const createTab = (url, newTabIndex, currentTabId, cookieStoreId, closeTab, openerTabId) => {
   Tabs.create({
     url,
@@ -35,9 +37,13 @@ export const webRequestListener = (requestDetails) => {
     Storage.get('default'),
   ]).then(([hostMap, identities, currentTab, defaultContainer]) => {
 
-    if (currentTab.incognito || !hostMap) {
+    if (currentTab.incognito || !hostMap || processedRequests[hostname]) {
       return {};
     }
+
+    // Assume that multiple requests to the same hostname in 500ms are redirects of some kind. Valid assumption?
+    processedRequests[hostname] = true;
+    setTimeout(() => delete processedRequests[hostname], 500);
 
     const hostIdentity = identities.find((identity) => identity.cookieStoreId === hostMap.cookieStoreId);
     const defaultIdentity = identities.find((identity) => identity.cookieStoreId === defaultContainer.cookieStoreId);
