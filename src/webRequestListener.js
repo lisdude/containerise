@@ -2,11 +2,12 @@ import Storage from './Storage/index';
 import ContextualIdentity from './ContextualIdentity';
 import Tabs, {NEW_TAB_PAGES} from './Tabs';
 
-const createTab = (url, newTabIndex, currentTabId, cookieStoreId, closeTab) => {
+const createTab = (url, newTabIndex, currentTabId, cookieStoreId, closeTab, openerTabId) => {
   Tabs.create({
     url,
     index: newTabIndex,
     cookieStoreId,
+    openerTabId,
   });
 
   if (closeTab) {
@@ -41,6 +42,9 @@ export const webRequestListener = (requestDetails) => {
     const hostIdentity = identities.find((identity) => identity.cookieStoreId === hostMap.cookieStoreId);
     const defaultIdentity = identities.find((identity) => identity.cookieStoreId === defaultContainer.cookieStoreId);
     const closeTab = NEW_TAB_PAGES.has(currentTab.url);
+    // WARNING: When you open a new tab with cookieStoreId firefox-default, it won't work with an openerTabId set. The cookiestore will default to the opener tab.
+    //              However, it works just fine when you use firefox-default with no openerTabId OR if you use any other cookieStoreId with an openerTabId.
+    const previousTab = closeTab ? currentTab.openerTabId : currentTab.id;
 
     let newContainer;
 
@@ -50,7 +54,7 @@ export const webRequestListener = (requestDetails) => {
       newContainer = hostIdentity.cookieStoreId;
     }
 
-    return !newContainer ? {} : createTab(requestDetails.url, currentTab.index + 1, currentTab.id, newContainer, closeTab);
+    return !newContainer ? {} : createTab(requestDetails.url, currentTab.index + 1, currentTab.id, newContainer, closeTab, previousTab);
   });
 
 };
