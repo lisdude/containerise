@@ -1,3 +1,10 @@
+export const NEW_TAB_PAGES = new Set([
+  'about:startpage',
+  'about:newtab',
+  'about:home',
+  'about:blank',
+]);
+
 class Tabs {
 
   constructor() {

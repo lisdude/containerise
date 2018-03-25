@@ -1,15 +1,17 @@
 import Storage from './Storage/index';
 import ContextualIdentity from './ContextualIdentity';
-import Tabs from './Tabs';
+import Tabs, {NEW_TAB_PAGES} from './Tabs';
 
-const createTab = (url, newTabIndex, currentTabId, cookieStoreId) => {
+const createTab = (url, newTabIndex, currentTabId, cookieStoreId, closeTab) => {
   Tabs.create({
     url,
     index: newTabIndex,
     cookieStoreId,
   });
 
-  Tabs.remove(currentTabId);
+  if (closeTab) {
+    Tabs.remove(currentTabId);
+  }
 
   return {
     cancel: true,
@@ -38,6 +40,7 @@ export const webRequestListener = (requestDetails) => {
 
     const hostIdentity = identities.find((identity) => identity.cookieStoreId === hostMap.cookieStoreId);
     const defaultIdentity = identities.find((identity) => identity.cookieStoreId === defaultContainer.cookieStoreId);
+    const closeTab = NEW_TAB_PAGES.has(currentTab.url);
 
     let newContainer;
 
@@ -47,7 +50,7 @@ export const webRequestListener = (requestDetails) => {
       newContainer = hostIdentity.cookieStoreId;
     }
 
-    return !newContainer ? {} : createTab(requestDetails.url, currentTab.index + 1, currentTab.id, newContainer);
+    return !newContainer ? {} : createTab(requestDetails.url, currentTab.index + 1, currentTab.id, newContainer, closeTab);
   });
 
 };
